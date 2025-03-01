@@ -38,17 +38,20 @@ def get_username():
         return ""
 
 # For grid
-def generate_image(seed):
-    grid.makeGrid(x = 30, y = 30)
-    return grid.displayGrid()
+def generate_image(seed = 12345):
+    sampleGrid = grid.Grid(30,30,seed)
+    sampleGrid.generateRooms(8, max_room_size=8)
+    return sampleGrid
 
 @app.route('/')
 def welcome_page():
+    sampleGrid = generate_image()
     # Check if the user is already authenticated
     if current_user.is_authenticated:
         # Redirect to the main page if logged in
-        return render_template('home.html', username=get_username(), image=generate_image(random.random()))
-    return render_template('index.html', username=get_username())
+        return render_template('home.html', username=get_username(), image=sampleGrid.displayGrid())
+    # 
+    return render_template('index.html', username=get_username(), image=sampleGrid.displayGrid(), text=sampleGrid.displayGrid("Text"))
 
 @app.route('/logout')
 @login_required
