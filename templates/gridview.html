@@ -1,0 +1,23 @@
+{% extends 'nav.html' %}
+
+{% block content %}
+<div class="container my-5">
+    <!-- Welcome Section -->
+    <div class="text-center mb-4">
+        <h2 class="display-5">Your Maze</h2>
+        <img src="{{ image }}"/>
+        <a href="" id="a" hidden></a>
+        <button class="btn btn-primary" onclick="download()">Save Maze Locally</button>
+    </div>
+</div>
+
+<script>
+    const download = () => {
+        let a = document.querySelector("#a");
+        let file = new Blob(['{"seed": "{{seed}}", "x": "{{x}}", "y": "{{y}}"}'], {type: 'text/plain'});
+        a.href = URL.createObjectURL(file);
+        a.download = 'maze.json';
+        a.click();
+    }
+</script>
+{% endblock %}

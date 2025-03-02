@@ -135,7 +135,7 @@ def generate_room_description():
 def generate_maze(width, height, room_count, seed=None):
     """Generate a maze with rooms and return the maze grid and descriptions."""
     if seed is None:
-        seed = random.random()
+        seed = random.getrandbits(32)
         print(f"Generated New Seed: {seed} - Use this to regenerate the same maze!") # new maze seed number
     else:
         print(f"Using Provided Seed: {seed} - This will generate the same maze.") # seed number of old maze

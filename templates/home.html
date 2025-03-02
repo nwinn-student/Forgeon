@@ -5,9 +5,41 @@
     <!-- Welcome Section -->
     <div class="text-center mb-4">
         <h2 class="display-5">Welcome to Forgeon!</h2>
-		<p>Sample text here</p>
+        <p id="error-text" class="text-center bg-danger text-white" hidden>Not a valid maze!</p>
         <img src="{{ image }}"/>
+        <div>
+            <a class="btn btn-primary" href="/maze">Generate Maze!</a>
+            <button class="btn btn-primary" onclick="document.querySelector('#file-upload').click()">Load Maze</button>
+            <input id="file-upload" type="file" hidden></input>
+        </div>
     </div>
 </div>
+
+<script>
+    document.querySelector('#file-upload').addEventListener('change', (event) => {
+        let maze = event.target.files[0];
+        if(maze){
+            const reader = new FileReader();
+            reader.onload = e => { 
+                const contents = e.target.result;
+                let json_contents;
+                try{
+                    json_contents = JSON.parse(contents);
+                }
+                catch(e){
+                    document.querySelector("#error-text").hidden = false;
+                    return;
+                }
+                
+                window.location.replace(`/maze/${json_contents['x']}/${json_contents['y']}/${json_contents['seed']}`)
+
+            }
+
+            reader.onerror = e => { console.error("Error reading file:", e); }
+
+            reader.readAsText(maze);
+        }
+    });
+</script>
 
 {% endblock %}

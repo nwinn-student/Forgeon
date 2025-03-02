@@ -29,7 +29,8 @@ def colorToString(color):
 # Class for the Grid
 class Grid:
 	# initializes the grid's size
-	def __init__(self, x : int = 30, y : int = 30, seed : int = 12345):
+	def __init__(self, x : int = 30, y : int = 30, seed : int = random.getrandbits(32)):
+		random.seed(seed)
 		if type(x) != int:
 			raise BaseException('Grid() - The input "x" must be an int.')
 		if type(y) != int:
@@ -38,7 +39,7 @@ class Grid:
 			raise BaseException('Grid() - The input for "x" or "y" must be at least 1.')
 		self.x = x
 		self.y = y
-		self.seed = random.seed(seed)
+		self.seed = seed
 		self.grid = self.makeGrid()
 	# Creates a grid of x by y pixels, where the outermost layer is a black 1 pixel thick border
 	def makeGrid(self):

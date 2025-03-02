@@ -38,8 +38,8 @@ def get_username():
         return ""
 
 # For grid
-def generate_image(seed = 12345):
-    sampleGrid = grid.Grid(30,30,seed)
+def generate_image(x = 30, y = 30, seed = random.getrandbits(32)):
+    sampleGrid = grid.Grid(x,y,seed)
     sampleGrid.generateRooms(8, max_room_size=8)
     return sampleGrid
 
@@ -102,3 +102,13 @@ def update_password():
             db.session.query(Users).filter(Users.id == current_user.get_id()).update({'password': request.form.get('password')})
             db.session.commit()
         return render_template("settings.html", username=get_username())
+
+@app.route('/maze')
+@login_required
+def maze_redir():
+    return redirect('/maze/30/30/' + str(random.getrandbits(32)))
+
+@app.route('/maze/<int:x>/<int:y>/<int:seed>')
+@login_required
+def maze_view(x, y, seed):
+    return render_template('gridview.html', image=generate_image(x, y, seed).displayGrid(), x=x, y=y, seed=seed)
