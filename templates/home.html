@@ -2,15 +2,14 @@
 
 {% block content %}
 <div class="container my-5">
-    <!-- Welcome Section -->
     <div class="text-center mb-4">
-        <h2 class="display-5">Welcome to Forgeon!</h2>
-        <p id="error-text" class="text-center bg-danger text-white" hidden>Not a valid maze!</p>
-        <img src="{{ image }}"/>
+        <h2 class="display-4 fw-bold">Welcome to Forgeon!</h2>
+        <p id="error-text" class="alert alert-danger text-center fw-bold" hidden>Not a valid maze!</p>
+        <img src="{{ image }}" class="img-fluid my-3 rounded shadow-lg" alt="Generated Maze">
         <div>
-            <a class="btn btn-primary" href="/maze">Generate Maze!</a>
-            <button class="btn btn-primary" onclick="document.querySelector('#file-upload').click()">Load Maze</button>
-            <input id="file-upload" type="file" hidden></input>
+            <a class="btn btn-primary btn-lg me-2" href="/maze">Generate Maze</a>
+            <button class="btn btn-secondary btn-lg" onclick="document.querySelector('#file-upload').click()">Load Maze</button>
+            <input id="file-upload" type="file" hidden>
         </div>
     </div>
 </div>
@@ -18,28 +17,18 @@
 <script>
     document.querySelector('#file-upload').addEventListener('change', (event) => {
         let maze = event.target.files[0];
-        if(maze){
+        if (maze) {
             const reader = new FileReader();
             reader.onload = e => { 
-                const contents = e.target.result;
-                let json_contents;
-                try{
-                    json_contents = JSON.parse(contents);
-                }
-                catch(e){
+                try {
+                    let json_contents = JSON.parse(e.target.result);
+                    window.location.replace(`/maze/${json_contents.x}/${json_contents.y}/${json_contents.seed}`);
+                } catch (error) {
                     document.querySelector("#error-text").hidden = false;
-                    return;
                 }
-                
-                window.location.replace(`/maze/${json_contents['x']}/${json_contents['y']}/${json_contents['seed']}`)
-
-            }
-
-            reader.onerror = e => { console.error("Error reading file:", e); }
-
+            };
             reader.readAsText(maze);
         }
     });
 </script>
-
 {% endblock %}
