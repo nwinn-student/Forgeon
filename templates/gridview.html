@@ -2,12 +2,11 @@
 
 {% block content %}
 <div class="container my-5">
-    <!-- Welcome Section -->
     <div class="text-center mb-4">
-        <h2 class="display-5">Your Maze</h2>
-        <img src="{{ image }}"/>
+        <h2 class="display-4 fw-bold">Your Maze</h2>
+        <img src="{{ image }}" class="img-fluid my-3 rounded shadow-lg" alt="Maze Image">
         <a href="" id="a" hidden></a>
-        <button class="btn btn-primary" onclick="download()">Save Maze Locally</button>
+        <button class="btn btn-primary btn-lg mt-3" onclick="download()">Save Maze Locally</button>
     </div>
 </div>
 
