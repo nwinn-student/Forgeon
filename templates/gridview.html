@@ -4,9 +4,16 @@
 <div class="container my-5">
     <div class="text-center mb-4">
         <h2 class="display-4 fw-bold">Your Maze</h2>
-        <img src="{{ image }}" class="img-fluid my-3 rounded shadow-lg" alt="Maze Image">
-        <a href="" id="a" hidden></a>
-        <button class="btn btn-primary btn-lg mt-3" onclick="download()">Save Maze Locally</button>
+        <img src="{{ image }}" class="img-fluid my-3 rounded shadow-lg" alt="Maze Image" usemap="#mazemap">
+	<map name="mazemap">
+            {% for coord, desc in maze %}
+            <area style="cursor: pointer" shape="rect" coords={{ coord }} title={{desc}} onclick="console.log('{{desc}}')">
+            {% endfor %}
+        </map>
+        <div>
+       	    <a href="" id="a" hidden></a>
+            <button class="btn btn-primary btn-lg mt-3" onclick="download()">Save Maze Locally</button>
+        </div>
     </div>
 </div>
 

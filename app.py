@@ -42,6 +42,15 @@ def generate_image(x = 30, y = 30, seed = random.getrandbits(32)):
     sampleGrid = grid.Grid(x,y,seed)
     sampleGrid.generateRooms(8, max_room_size=8)
     return sampleGrid
+    
+def grab_map(grid):
+    '''
+	    Takes the Grid and gets the room descriptions/locations
+	    A sample for how the input should be:
+		    [coords , description, more as needed (change the loop in the html files)]
+		Default image size is 640 x 480, and it scales image up/down
+    '''
+    return [["0,0,100,100","Sample description"]]
 
 @app.route('/')
 def welcome_page():
@@ -49,9 +58,18 @@ def welcome_page():
     # Check if the user is already authenticated
     if current_user.is_authenticated:
         # Redirect to the main page if logged in
-        return render_template('home.html', username=get_username(), image=sampleGrid.displayGrid())
+        return render_template('home.html', 
+		        username=get_username(), 
+		        image=sampleGrid.displayGrid(),
+		        maze=grab_map(sampleGrid) # use a better approach, this is for a sample
+		    )
     # 
-    return render_template('index.html', username=get_username(), image=sampleGrid.displayGrid(), text=sampleGrid.displayGrid("Text"))
+    return render_template('index.html', 
+        username=get_username(), 
+        image=sampleGrid.displayGrid(), 
+        text=sampleGrid.displayGrid("Text"),
+        maze=grab_map(sampleGrid) # use a better approach, this is for a sample
+        )
 
 @app.route('/logout')
 @login_required
@@ -111,4 +129,11 @@ def maze_redir():
 @app.route('/maze/<int:x>/<int:y>/<int:seed>')
 @login_required
 def maze_view(x, y, seed):
-    return render_template('gridview.html', image=generate_image(x, y, seed).displayGrid(), x=x, y=y, seed=seed)
+    sampleGrid = generate_image(x, y, seed)
+    return render_template('gridview.html', 
+        image=sampleGrid.displayGrid(), 
+        x=x, 
+        y=y, 
+        seed=seed,
+        maze=grab_map(sampleGrid) # use a better approach, this is for a sample
+        )

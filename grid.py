@@ -35,8 +35,8 @@ class Grid:
 			raise BaseException('Grid() - The input "x" must be an int.')
 		if type(y) != int:
 			raise BaseException('Grid() - The input "y" must be an int.')
-		if x < 1 or y < 1:
-			raise BaseException('Grid() - The input for "x" or "y" must be at least 1.')
+		if x < 3 or y < 3:
+			raise BaseException('Grid() - The input for "x" or "y" must be at least 3.')
 		self.x = x
 		self.y = y
 		self.seed = seed
@@ -92,8 +92,8 @@ class Grid:
 		return "data:image/png;base64," + base64.b64encode(pngImage.getvalue()).decode('utf8')
         
 	# saves the image as a png
-	def save():
-		pyplot.imsave('sample.png', Grid)
+	def save(self):
+		pyplot.imsave('sample.png', self.grid)
 		
 	# textify
 	def text(self):

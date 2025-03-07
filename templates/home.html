@@ -5,7 +5,12 @@
     <div class="text-center mb-4">
         <h2 class="display-4 fw-bold">Welcome to Forgeon!</h2>
         <p id="error-text" class="alert alert-danger text-center fw-bold" hidden>Not a valid maze!</p>
-        <img src="{{ image }}" class="img-fluid my-3 rounded shadow-lg" alt="Generated Maze">
+        <img src="{{ image }}" class="img-fluid my-3 rounded shadow-lg" alt="Generated Maze" usemap="#mazemap">
+        <map name="mazemap">
+            {% for coord, desc in maze %}
+            <area style="cursor: pointer" shape="rect" coords={{ coord }} title={{desc}} onclick="console.log('{{desc}}')">
+            {% endfor %}
+        </map>
         <div>
             <a class="btn btn-primary btn-lg me-2" href="/maze">Generate Maze</a>
             <button class="btn btn-secondary btn-lg" onclick="document.querySelector('#file-upload').click()">Load Maze</button>

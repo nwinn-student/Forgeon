@@ -4,9 +4,15 @@
 <div class="container my-5">
     <!-- Welcome Section -->
     <div class="text-center mb-4">
-        <h2 class="display-5">Welcome to Forgeon!</h2>
-        <p>Sample text here</p>
-        <img src="{{ image }}"/>
+        <h2 class="display-4 fw-bold">Welcome to Forgeon!</h2>
+        <p>Login to generate more mazes.</p>
+        <img src="{{ image }}"  usemap="#mazemap"/>
+        <map name="mazemap">
+            {% for coord, desc in maze %}
+            <area style="cursor: pointer" shape="rect" coords={{ coord }} title={{desc}} onclick="console.log('{{desc}}')">
+            {% endfor %}
+        </map>
+        <!-- A sample text display -->
         <p style="white-space: pre-line; font-family: monospace; transform: scale(2, .7);">{{text}}</p>
     </div>
 </div>
