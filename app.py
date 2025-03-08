@@ -125,15 +125,38 @@ def update_password():
 @login_required
 def maze_redir():
     return redirect('/maze/30/30/' + str(random.getrandbits(32)))
+	
+@app.route('/maze/randomize')
+@login_required
+def randomize_maze():
+    # Randomize the maze parameters and generate a new maze with these parameters
+    # Random width between 10 and 100
+    x = random.randint(10, 100)  
+    # Random height between 10 and 100
+    y = random.randint(10, 100)  
+    seed = random.getrandbits(32)  
+    return redirect(url_for('maze_view', x=x, y=y, seed=seed))
 
 @app.route('/maze/<int:x>/<int:y>/<int:seed>')
 @login_required
 def maze_view(x, y, seed):
-    sampleGrid = generate_image(x, y, seed)
-    return render_template('gridview.html', 
-        image=sampleGrid.displayGrid(), 
-        x=x, 
-        y=y, 
-        seed=seed,
-        maze=grab_map(sampleGrid) # use a better approach, this is for a sample
-        )
+    return render_template('gridview.html', image=generate_image(x, y, seed).displayGrid(), x=x, y=y, seed=seed)
+
+@app.route('/maze/custom', methods=['POST'])
+@login_required
+def custom_maze():
+    try:
+        # default values of 30x30
+        x = int(request.form.get('width', 30))
+        y = int(request.form.get('height', 30))
+        
+        # make sure user input is valid
+        if x < 10 or x > 200 or y < 10 or y > 200:
+            raise ValueError("Width and height must be between 10 and 200.")
+         # Random seed
+        seed = random.getrandbits(32) 
+        return redirect(url_for('maze_view', x=x, y=y, seed=seed))
+    except ValueError as e:
+        flash(f"Invalid input: {e}", "danger")
+        # Redirect to default maze
+        return redirect(url_for('maze_view', x=30, y=30, seed=random.getrandbits(32)))  
