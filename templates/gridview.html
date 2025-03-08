@@ -13,6 +13,19 @@
         <div>
        	    <a href="" id="a" hidden></a>
             <button class="btn btn-primary btn-lg mt-3" onclick="download()">Save Maze Locally</button>
+		    <a class="btn btn-secondary" href="/maze/randomize">Regenerate Maze</a>
+    </div>
+    <div class="text-center">
+    </div>
+    <div class="text-center mt-4">
+        <h4>Custom Maze Size</h4>
+        <form action="/maze/custom" method="post">
+            <input type="number" name="width" placeholder="Width" min="10" max="200" required>
+            <input type="number" name="height" placeholder="Height" min="10" max="200" required>
+            <button type="submit" class="btn btn-info">Generate Custom Maze</button>
+        </form>
+    </div>
+</div>
         </div>
     </div>
 </div>
