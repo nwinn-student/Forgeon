@@ -50,6 +50,25 @@ def grab_map(grid):
 		    [coords , description, more as needed (change the loop in the html files)]
 		Default image size is 640 x 480, and it scales image up/down
     '''
+    '''
+		Potential formula (waiting on actual values to test practically):
+		a = min(480x/y, 640)
+		b = min(640y/x, 480)
+		where x, y is grid.x, grid.y and a, b is the size of the image within the 640x480 image
+		
+		squareWidth = a/x # the width of each grid square
+		squareHeight = b/y # the height of each grid square
+		
+		startWidth = (640 - a)/2 and startHeight = (480 - b)/2
+		Should these be correct, upon receiving the rectangle for each room description we can output:
+			["{startWidth + squareWidth*c_1.x},
+			{startHeight + squareHeight*c_1.y},
+			{startWidth + squareWidth*c_2.x}, 
+			{startHeight + squareHeight*c_2.y}" , {roomDescription} , {whatever else we want to add...} ]
+		for a single room.
+		where c_1 is the topleft corner point and c_2 is the bottomright corner point
+		
+    '''
     return [["0,0,100,100","Sample description"]]
 
 @app.route('/')
@@ -140,15 +159,12 @@ def randomize_maze():
 @app.route('/maze/<int:x>/<int:y>/<int:seed>')
 @login_required
 def maze_view(x, y, seed):
-    try:
-        # make sure user input is valid
-        if x < 10 or x > 200 or y < 10 or y > 200:
-            raise ValueError("Width and height must be between 10 and 200.")
-        return render_template('gridview.html', image=generate_image(x, y, seed).displayGrid(), x=x, y=y, seed=seed)
-    except ValueError as e:
-        flash(f"Invalid input: {e}", "danger")
+    # make sure user input is valid
+    if x < 10 or x > 200 or y < 10 or y > 200:
+        flash(f"Invalid input: Width and height must be between 10 and 200.", "danger")
         # Redirect to default maze
         return redirect(url_for('maze_view', x=30, y=30, seed=random.getrandbits(32)))
+    return render_template('gridview.html', username=get_username(), image=generate_image(x, y, seed).displayGrid(), x=x, y=y, seed=seed)
 
 @app.route('/maze/custom', methods=['POST'])
 @login_required
