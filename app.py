@@ -140,23 +140,23 @@ def randomize_maze():
 @app.route('/maze/<int:x>/<int:y>/<int:seed>')
 @login_required
 def maze_view(x, y, seed):
-    return render_template('gridview.html', image=generate_image(x, y, seed).displayGrid(), x=x, y=y, seed=seed)
+    try:
+        # make sure user input is valid
+        if x < 10 or x > 200 or y < 10 or y > 200:
+            raise ValueError("Width and height must be between 10 and 200.")
+        return render_template('gridview.html', image=generate_image(x, y, seed).displayGrid(), x=x, y=y, seed=seed)
+    except ValueError as e:
+        flash(f"Invalid input: {e}", "danger")
+        # Redirect to default maze
+        return redirect(url_for('maze_view', x=30, y=30, seed=random.getrandbits(32)))
 
 @app.route('/maze/custom', methods=['POST'])
 @login_required
 def custom_maze():
-    try:
-        # default values of 30x30
-        x = int(request.form.get('width', 30))
-        y = int(request.form.get('height', 30))
-        
-        # make sure user input is valid
-        if x < 10 or x > 200 or y < 10 or y > 200:
-            raise ValueError("Width and height must be between 10 and 200.")
-         # Random seed
-        seed = random.getrandbits(32) 
-        return redirect(url_for('maze_view', x=x, y=y, seed=seed))
-    except ValueError as e:
-        flash(f"Invalid input: {e}", "danger")
-        # Redirect to default maze
-        return redirect(url_for('maze_view', x=30, y=30, seed=random.getrandbits(32)))  
+    # default values of 30x30
+    x = int(request.form.get('width', 30))
+    y = int(request.form.get('height', 30))
+    
+    # Random seed
+    seed = random.getrandbits(32) 
+    return redirect(url_for('maze_view', x=x, y=y, seed=seed))

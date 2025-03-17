@@ -77,6 +77,7 @@ class Grid:
 		ax.set_axis_off()
 		fig.add_axes(ax)
 		ax.imshow(self.grid)
+		fig.clear()
 		pass
 	
 	# converts the graph into an base64 image to be viewed on the web
@@ -89,6 +90,7 @@ class Grid:
 		# Source: https://gitlab.com/-/snippets/1924163
 		pngImage = io.BytesIO()
 		FigureCanvas(fig).print_png(pngImage)
+		fig.clear()
 		return "data:image/png;base64," + base64.b64encode(pngImage.getvalue()).decode('utf8')
         
 	# saves the image as a png
