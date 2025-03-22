@@ -4,6 +4,13 @@ from flask_sqlalchemy import SQLAlchemy
 import string
 import random
 import grid
+import sqlite3
+
+connection = sqlite3.connect("Forgeon.db")
+cursor = connection.cursor()
+
+cursor.execute(""" CREATE TABLE IF NOT EXISTS Maze (maze_id BIGINT, user varchar(255), name varchar(255),
+x INT, y INT, seed INT) """)
 
 app = Flask(__name__)
 secret_key = ''
@@ -176,3 +183,44 @@ def custom_maze():
     # Random seed
     seed = random.getrandbits(32) 
     return redirect(url_for('maze_view', x=x, y=y, seed=seed))
+
+@app.route('/save-maze', methods=['POST'])
+@login_required
+def save_maze():
+    cursor.execute("SELECT MAX(maze_id) FROM Maze WHERE user = ?", (current_user.username,))
+    maze_id = cursor.fetchone()
+    if maze_id[0] != None:
+        maze_id = int(maze_id[0]) + 1
+    else:
+        maze_id = 1
+    print(request.form.get('name'))
+    cursor.execute("INSERT INTO Maze (maze_id, user, name, x, y, seed) VALUES (?, ?, ?, ?, ?, ?)", (maze_id, current_user.username, request.json.get('name'), request.json.get('x'), request.json.get('y'), request.json.get('seed')))
+    connection.commit()
+    return jsonify({"success": True})
+
+@app.route('/my-mazes')
+@login_required
+def user_mazes():
+    cursor.execute("SELECT maze_id, name, x, y, seed FROM Maze WHERE user = ? ORDER BY maze_id", (current_user.username,))
+    mazes = cursor.fetchall()
+    if len(mazes) == 0:
+        return render_template('mazes.html', mazes=None, username=get_username())
+    return render_template('mazes.html', mazes=[list(i) for i in mazes], username=get_username())
+
+@app.route('/delete-maze', methods=['POST'])
+@login_required
+def delete_maze():
+    cursor.execute("DELETE FROM Maze WHERE maze_id = ? AND user = ?", (int(request.json.get('id')), current_user.username))
+    cursor.execute("SELECT MAX(maze_id) FROM Maze WHERE user = ?", (current_user.username,))
+    maze_count = cursor.fetchone()
+    if maze_count[0] != None:
+        maze_count = int(maze_count[0]) + 1
+    else:
+        maze_count = 1
+
+    for i in range(int(request.json.get('id')) + 1, maze_count):
+        cursor.execute("UPDATE Maze SET maze_id = ? WHERE maze_id = ? AND user = ?", (i - 1, i, current_user.username))
+
+    connection.commit()
+
+    return jsonify({"success": True})
