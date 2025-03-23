@@ -26,6 +26,7 @@ def colorToString(color):
 	else:
 		return '_'
 
+
 # Class for the Grid
 class Grid:
 	# initializes the grid's size
@@ -62,6 +63,44 @@ class Grid:
 			y = random.randint(1, self.y - height)
 			color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
 			Room(x, y, width, height, color).place(self)
+    
+    # converts a rectangle from grid space into image space, then to a string
+	def toImageLocation(self, point1, point2) -> str:
+		if type(point1) != tuple or type(point2) != tuple:
+			raise BaseException(f'Grid.toImageLocation - {type(point1) != tuple and "point1" or "point2"} must be a tuple.')
+		if len(point1) != 2 or len(point2) != 2:
+			raise BaseException(f'Grid.toImageLocation - {len(point1) != 2 and "point1" or "point2"} must be of length 2.')
+		if type(point1[0]) != int or type(point1[1]) != int or type(point2[0]) != int or type(point2[1]) != int:
+			raise BaseException(f'Grid.toImageLocation - {\
+				(type(point1[0]) != int or type(point2[0]) != int) and "first" or "second"} input into {\
+				(type(point1[0]) != int or type(point1[1]) != int) and "point1" or "point2"} must be an integer.') # your syntaxical colorer may not like this
+		if point1[0] < 0 or point1[1] < 0 or point2[0] < 0 or point2[1] < 0:
+			raise BaseException(f'Grid.toImageLocation - {\
+				(point1[0] < 0 or point2[0] < 0) and "first" or "second"} input into {\
+				(point1[0] < 0 or point1[1] < 0) and "point1" or "point2"} must be at least 0.') # your syntaxical colorer may not like this
+		if point1[0] >= point2[0] or point1[1] >= point2[1]:
+			raise BaseException(f'Grid.toImageLocation - {\
+				point1[0] > point2[0] and "first" or "second"} input into point2 must be less than {\
+				point1[0] > point2[0] and point1[0] or point1[1]}.') # your syntaxical colorer may not like this
+		if point1[0] > self.x or point1[1] > self.y or point2[0] > self.x or point2[1] > self.y:
+			raise BaseException(f'Grid.toImageLocation - {\
+				(point1[0] > self.x or point1[1] > self.y) and "point1" or "point2"} cannot be beyond Grid(x={self.x},y={self.y}).')
+		try:
+			print(self.squareHeight)
+		except:
+			a = min(480*self.x/self.y, 640)
+			b = min(640*self.y/self.x, 480)
+			self.squareWidth = a/self.x # the width of each grid square
+			self.squareHeight = b/self.y # the height of each grid square
+			self.startWidth = (640 - a)/2
+			self.startHeight = (480 - b)/2	
+		return (
+			self.startWidth + self.squareWidth*point1[0],
+			self.startHeight + self.squareHeight*point1[1],
+			self.startWidth + self.squareWidth*point2[0],
+			self.startHeight + self.squareHeight*point2[1])
+		
+        
     
 	# displays the grid either through an image or through text
 	def displayGrid(self, variant = 'Image'):

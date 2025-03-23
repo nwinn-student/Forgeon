@@ -75,8 +75,13 @@ def grab_map(grid):
 		for a single room.
 		where c_1 is the topleft corner point and c_2 is the bottomright corner point
 		
+		I have setup a simple test for the top-left corner point of the grid, just to verify the idea works
     '''
-    return [["0,0,100,100","Sample description"]]
+    
+    return [[
+                '{},{},{},{}'.format(*grid.toImageLocation((0,0),(1,1))),
+                "Sample description"
+            ]]
 
 @app.route('/')
 def welcome_page():
@@ -171,7 +176,8 @@ def maze_view(x, y, seed):
         flash(f"Invalid input: Width and height must be between 10 and 200.", "danger")
         # Redirect to default maze
         return redirect(url_for('maze_view', x=30, y=30, seed=random.getrandbits(32)))
-    return render_template('gridview.html', username=get_username(), image=generate_image(x, y, seed).displayGrid(), x=x, y=y, seed=seed)
+    sampleGrid = generate_image(x, y, seed)
+    return render_template('gridview.html', username=get_username(), image=sampleGrid.displayGrid(), x=x, y=y, seed=seed, maze=grab_map(sampleGrid))
 
 @app.route('/maze/custom', methods=['POST'])
 @login_required

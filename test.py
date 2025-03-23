@@ -170,7 +170,7 @@ def text_displayImage():
 
 # Test Case 10: Validate Empty Grid Text Display
 def test_displayText():
-    """Checks that the text display function is correctly handled (currently not implemented)."""
+    """Checks that the text display function is correctly handled."""
     sampleGrid = Grid(3,3)
     
     grid_text = "###\n#.#\n###\n"
@@ -178,21 +178,67 @@ def test_displayText():
     print("\tChecking text display output to ensure it matches the actual...")
     assert sampleGrid.displayGrid('Text') == grid_text, "Text display result does not match the actual."
 
-# Incomplete tests
-# Test Case 11: Converting Color to String ####
+# Test Case 11: Converting Color to String w/ a Valid Input
 def test_colorToString_valid():
-    """"""
-    color = (0, 0, 0)
-    # ....
-    assert color is None, "Not implemented"
+    """Ensures the correct string is returned based on the provided color.
+    TODO: Add checks for other colors added."""
+    valid_inputs = [
+        (0,0,0), (225,225,225), (15,162,84)
+    ]
+    expected = ["#",".","_"]
+    output = []
+    for color in valid_inputs:
+        print(f"\tChecking color {color} to ensure it matches {expected[len(output)]}")
+        output.append(colorToString(color))
+        assert expected[len(output) - 1] == output[len(output) - 1], "Color did not yield the expected string value."
+    assert output == expected, "Strings do not match the expected result."
 
-# Test Case 12: Converting Color to String ####
+# Test Case 12: Converting Color to String w/ Invalid Inputs
 def test_colorToString_invalid():
-    """"""
-    color = (0, 0, 0)
-    # ....
-    assert color is None, "Not implemented"
+    """Exhaustive check to ensure that all invalid colors raise the correct exception."""
+    invalid_inputs = [
+        1, (0,0), (1.1,0,0), (0,"",0), (0,0,[1,2,3]),
+        (-1,0,0), (0,-1,0), (0,0,-1)
+    ]
+    for color in invalid_inputs:
+        print(f"\tTesting invalid input: color={color}")
+        try:
+            colorToString(color)
+            assert False, f"\tExpected exception for color={color}"
+        except BaseException as e:
+            print(f"\tCorrectly caught exception: {e}")
 
+# Test Case 13: Converting Grid location to Image location w/ Valid Inputs
+def test_gridToImageLocation_valid():
+    """Ensures that the top-left corner of the grid is correctly translated to the image location."""
+    x, y = 5, 5
+    sampleGrid = Grid(x, y)
+    point1, point2 = (0,0), (1,1)
+    loc = sampleGrid.toImageLocation(point1,point2)
+    expected = (80, 0, 176, 96)
+    print(f"\tChecking room location: Expected location - {expected}, Got ({loc[0]},{loc[1]},{loc[2]},{loc[3]})")
+    assert loc == expected, "Grid location did not properly convert to image location"
+
+# Test Case 14: Converting Grid location to Image location w/ Invalid Inputs
+def test_gridToImageLocation_invalid():
+    """Exhaustive check to ensure that all invalid rectangles raise the correct exception."""
+    x, y = 5, 5
+    sampleGrid = Grid(x, y)
+    print(f"\tInitializing Grid(x={x}, y={y}) to test.")
+    invalid_inputs = [
+		(1,()), ((),1), ((),()), ((1,1),()), 
+		((1.1,1),(1,1)), ((1,1.1),(1,1)), ((1,1),(1.1,1)), ((1,1),(1,1.1)), 
+		((-1,1),(1,1)), ((1,-1),(1,1)), ((1,1),(-1,1)), ((1,1),(1,-1)),
+		((1,1),(0,0)), ((0,1),(1,0)),
+		((0,0),(6,6)),((6,6),(10,10))
+    ]
+    for point1, point2 in invalid_inputs:
+        print(f"\tTesting invalid input: point1={point1}, point2={point2}")
+        try:
+            sampleGrid.toImageLocation(point1,point2)
+            assert False, f"\tExpected exception for point1={point1}, point2={point2}"
+        except BaseException as e:
+            print(f"\tCorrectly caught exception: {e}")
 # Run all tests
 test_cases = [
     test_makeGrid_valid,
@@ -204,9 +250,11 @@ test_cases = [
     test_generateRandomRooms,
     test_displayGraph,
     text_displayImage,
-    test_displayText, # PATCH HALTED HERE
+    test_displayText,
     test_colorToString_valid,
     test_colorToString_invalid,
+    test_gridToImageLocation_valid,
+    test_gridToImageLocation_invalid,
 ]
 
 print("Running tests...\n")
