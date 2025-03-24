@@ -1,17 +1,20 @@
 {% extends 'nav.html' %}
 
 {% block content %}
-    <h1 class="display-4 text-center mb-5">Enter your Login Credentials!</h1>
-    <form action="#" method="post">
-      {% if failed %}
-      <p class="text-center bg-danger text-white">Login Credentials Not found!</p>
-      {% endif %}
-      <div class="d-flex flex-column align-items-center justify-content-center">
-            <input type="text" name="username" class="form-control w-25 mt-1" placeholder="Username">
-            <input type="password" name="password" class="form-control w-25 mt-1" placeholder="Password">
-            <button type="submit" class="btn btn-primary mt-2 w-25">Login!</button>
-            <p>Don't have an account? Register <a href="/register">here</a>!</p>
-      </div>
-    </form>
-
+<h1 class="display-4 text-center fw-bold mb-4">Login</h1>
+<form action="#" method="post" class="w-50 mx-auto p-4 shadow-lg rounded bg-light">
+    {% if failed %}
+    <p class="text-center alert alert-danger fw-bold">Login Credentials Not Found!</p>
+    {% endif %}
+    <div class="mb-3">
+        <label for="username" class="form-label fw-bold">Username</label>
+        <input type="text" name="username" id="username" class="form-control">
+    </div>
+    <div class="mb-3">
+        <label for="password" class="form-label fw-bold">Password</label>
+        <input type="password" name="password" id="password" class="form-control">
+    </div>
+    <button type="submit" class="btn btn-success w-100">Login</button>
+    <p class="text-center mt-3">Don't have an account? <a href="/register">Register here</a>.</p>
+</form>
 {% endblock %}
