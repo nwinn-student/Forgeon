@@ -4,6 +4,7 @@ import io
 import base64
 from math import ceil
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from MazeRoomDescr import ROOM_TYPES
 
 def colorToString(color):
 	if type(color) != tuple:
@@ -44,10 +45,10 @@ class Grid:
 		self.grid = self.makeGrid()
 	# Creates a grid of x by y pixels, where the outermost layer is a black 1 pixel thick border
 	def makeGrid(self):
-		return [[ceil((x % (self.x-1))/(x+1)) % 2*ceil((y % (self.y-1))/(y+1)) % 2 == 1 and \
-			(225,225,225) or (0,0,0) for x in range(self.x)] for y in range(self.y)]
-    
-	# generates n randomly sized rooms within grid
+	 	return [[ceil((x % (self.x-1))/(x+1)) % 2*ceil((y % (self.y-1))/(y+1)) % 2 == 1 and \
+	 		(225,225,225) or (0,0,0) for x in range(self.x)] for y in range(self.y)]
+     
+	# generates n randomly sized rooms within grid 
 	def generateRooms(self, n, max_room_size = 5):
 		if type(n) != int or type(max_room_size) != int:
 			raise BaseException('Grid.generateRooms - The input "n" must be an int.')
@@ -56,12 +57,20 @@ class Grid:
 		if n < 1 or max_room_size < 1:
 			raise BaseException('Grid.generateRooms - The input "n" or "max_room_size" must be at least 1.')
 			
-		for _ in range(n):
+		room_types = list(ROOM_TYPES.keys())
+		random.shuffle(room_types)
+		
+		# If we need more rooms than types, allow duplicates
+		if n > len(room_types):
+			room_types.extend(random.choices(room_types, k=n - len(room_types)))
+		
+		for i in range(n):
 			width = random.randint(2, max_room_size)
 			height = random.randint(2, max_room_size)
 			x = random.randint(1, self.x - width)
 			y = random.randint(1, self.y - height)
-			color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
+			# Uses color from ROOM_TYPES
+			color = ROOM_TYPES[room_types[i]]['rgb']
 			Room(x, y, width, height, color).place(self)
     
     # converts a rectangle from grid space into image space, then to a string

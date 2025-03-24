@@ -5,6 +5,7 @@ import string
 import random
 import grid
 import sqlite3
+from MazeRoomDescr import ROOM_TYPES, generate_room_description
 
 connection = sqlite3.connect("Forgeon.db")
 cursor = connection.cursor()
@@ -52,36 +53,42 @@ def generate_image(x = 30, y = 30, seed = random.getrandbits(32)):
     
 def grab_map(grid):
     '''
-	    Takes the Grid and gets the room descriptions/locations
-	    A sample for how the input should be:
-		    [coords , description, more as needed (change the loop in the html files)]
-		Default image size is 640 x 480, and it scales image up/down
+    Takes the Grid and gets the room descriptions/locations
+    Returns a list of [coordinates, description] pairs for each room
     '''
-    '''
-		Potential formula (waiting on actual values to test practically):
-		a = min(480x/y, 640)
-		b = min(640y/x, 480)
-		where x, y is grid.x, grid.y and a, b is the size of the image within the 640x480 image
-		
-		squareWidth = a/x # the width of each grid square
-		squareHeight = b/y # the height of each grid square
-		
-		startWidth = (640 - a)/2 and startHeight = (480 - b)/2
-		Should these be correct, upon receiving the rectangle for each room description we can output:
-			["{startWidth + squareWidth*c_1.x},
-			{startHeight + squareHeight*c_1.y},
-			{startWidth + squareWidth*c_2.x}, 
-			{startHeight + squareHeight*c_2.y}" , {roomDescription} , {whatever else we want to add...} ]
-		for a single room.
-		where c_1 is the topleft corner point and c_2 is the bottomright corner point
-		
-		I have setup a simple test for the top-left corner point of the grid, just to verify the idea works
-    '''
+    maze_data = []
+    # Dictionary to store room descriptions to ensure consistency
+    room_descriptions = {}
     
-    return [[
-                '{},{},{},{}'.format(*grid.toImageLocation((0,0),(1,1))),
-                "Sample description"
-            ]]
+    for y in range(grid.y):
+        for x in range(grid.x):
+           # check for room and color
+            if grid.grid[y][x] != (0, 0, 0) and grid.grid[y][x] != (225, 225, 225):
+               # room type based off color
+                room_type = None
+                for type_name, info in ROOM_TYPES.items():
+                    if info['rgb'] == grid.grid[y][x]:
+                        room_type = type_name
+                        break
+                
+                if room_type:
+                    # generate description
+                    room_info = ROOM_TYPES[room_type]
+                    
+                    # Create a unique key for this room type and color
+                    room_key = f"{room_type}_{room_info['color']}"
+                    
+                    # Generate description only once per room type and color
+                    if room_key not in room_descriptions:
+                        room_descriptions[room_key] = f"{room_info['color']} Room: {generate_room_description()}"
+                    
+                    # Get coordinates for the room
+                    coords = grid.toImageLocation((x, y), (x+1, y+1))
+                    maze_data.append([
+                        '{},{},{},{}'.format(*coords),
+                        room_descriptions[room_key]
+                    ])
+    return maze_data
 
 @app.route('/')
 def welcome_page():
