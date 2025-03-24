@@ -7,7 +7,7 @@ import grid
 import sqlite3
 from MazeRoomDescr import ROOM_TYPES, generate_room_description
 
-connection = sqlite3.connect("Forgeon.db")
+connection = sqlite3.connect("Forgeon.db", check_same_thread=False)
 cursor = connection.cursor()
 
 cursor.execute(""" CREATE TABLE IF NOT EXISTS Maze (maze_id BIGINT, user varchar(255), name varchar(255),

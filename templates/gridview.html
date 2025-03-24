@@ -23,6 +23,10 @@
       </div>
     </div>
 </div>
+
+<!-- Tooltip div for room descriptions -->
+<div id="room-tooltip" class="position-fixed bg-dark text-white p-3 rounded shadow" style="display: none; z-index: 1000; max-width: 300px;"></div>
+
 <div class="container my-5">
     <div class="text-center mb-4">
         <p id="error-text" class="text-center bg-danger text-white" hidden>Could not Save to Server!</p>
@@ -30,7 +34,9 @@
         <img src="{{ image }}" class="img-fluid my-3 rounded shadow-lg" alt="Maze Image" usemap="#mazemap">
 	    <map name="mazemap">
             {% for coord, desc in maze %}
-            <area style="cursor: pointer" shape="rect" coords="{{ coord }}" title="{{desc}}" onclick="console.log('{{desc}}')">
+            <area style="cursor: pointer" shape="rect" coords="{{ coord }}" title="{{ desc }}" 
+                  onmouseover="showTooltip(event, '{{ desc }}')" 
+                  onmouseout="hideTooltip()">
             {% endfor %}
         </map>
         <div>
@@ -51,6 +57,7 @@
         </form>
     </div>
 </div>
+
 <script>
     const download = () => {
         let a = document.querySelector("#a");
@@ -87,5 +94,38 @@
             $("#maze-name-modal").modal('hide');
         }
     });
+
+    // Tooltip functionality
+    function showTooltip(event, description) {
+        const tooltip = document.getElementById('room-tooltip');
+        tooltip.textContent = description;
+        tooltip.style.display = 'block';
+        
+        // Position tooltip near the mouse cursor
+        const x = event.clientX + 10;
+        const y = event.clientY + 10;
+        
+        // Ensure tooltip stays within viewport
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const viewportWidth = window.innerWidth;
+        const viewportHeight = window.innerHeight;
+        
+        let finalX = x;
+        let finalY = y;
+        
+        if (x + tooltipRect.width > viewportWidth) {
+            finalX = x - tooltipRect.width - 10;
+        }
+        if (y + tooltipRect.height > viewportHeight) {
+            finalY = y - tooltipRect.height - 10;
+        }
+        
+        tooltip.style.left = finalX + 'px';
+        tooltip.style.top = finalY + 'px';
+    }
+
+    function hideTooltip() {
+        document.getElementById('room-tooltip').style.display = 'none';
+    }
 </script>
 {% endblock %}
