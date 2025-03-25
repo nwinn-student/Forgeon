@@ -5,8 +5,9 @@ import string
 import random
 import grid
 import sqlite3
+from MazeRoomDescr import ROOM_TYPES, generate_room_description
 
-connection = sqlite3.connect("Forgeon.db")
+connection = sqlite3.connect("Forgeon.db", check_same_thread=False)
 cursor = connection.cursor()
 
 cursor.execute(""" CREATE TABLE IF NOT EXISTS Maze (maze_id BIGINT, user varchar(255), name varchar(255),
@@ -48,40 +49,27 @@ def get_username():
 def generate_image(x = 30, y = 30, seed = random.getrandbits(32)):
     sampleGrid = grid.Grid(x,y,seed)
     sampleGrid.generateRooms(8, max_room_size=8)
+    sampleGrid.generatePath(1)
     return sampleGrid
     
 def grab_map(grid):
     '''
-	    Takes the Grid and gets the room descriptions/locations
-	    A sample for how the input should be:
-		    [coords , description, more as needed (change the loop in the html files)]
-		Default image size is 640 x 480, and it scales image up/down
+    Takes the Grid and gets the room descriptions/locations
+    Returns a list of [coordinates, roomName, description] pairs for each room
     '''
-    '''
-		Potential formula (waiting on actual values to test practically):
-		a = min(480x/y, 640)
-		b = min(640y/x, 480)
-		where x, y is grid.x, grid.y and a, b is the size of the image within the 640x480 image
-		
-		squareWidth = a/x # the width of each grid square
-		squareHeight = b/y # the height of each grid square
-		
-		startWidth = (640 - a)/2 and startHeight = (480 - b)/2
-		Should these be correct, upon receiving the rectangle for each room description we can output:
-			["{startWidth + squareWidth*c_1.x},
-			{startHeight + squareHeight*c_1.y},
-			{startWidth + squareWidth*c_2.x}, 
-			{startHeight + squareHeight*c_2.y}" , {roomDescription} , {whatever else we want to add...} ]
-		for a single room.
-		where c_1 is the topleft corner point and c_2 is the bottomright corner point
-		
-		I have setup a simple test for the top-left corner point of the grid, just to verify the idea works
-    '''
-    
-    return [[
-                '{},{},{},{}'.format(*grid.toImageLocation((0,0),(1,1))),
-                "Sample description"
-            ]]
+    maze_data = []    
+    for topleft, bottomright, color in grid.rooms:
+        for type_name, info in ROOM_TYPES.items():
+            if info['rgb'] == color:
+                # Get coordinates for the room
+                coords = grid.toImageLocation(topleft, bottomright)
+                maze_data.append([
+                    '{},{},{},{}'.format(*coords),
+                    type_name,
+                    f"{type_name}: {generate_room_description()}" # regenerates when you refresh page, intended?
+                ])
+                break    
+    return maze_data
 
 @app.route('/')
 def welcome_page():
@@ -92,14 +80,13 @@ def welcome_page():
         return render_template('home.html', 
 		        username=get_username(), 
 		        image=sampleGrid.displayGrid(),
-		        maze=grab_map(sampleGrid) # use a better approach, this is for a sample
+		        maze=grab_map(sampleGrid)
 		    )
-    # 
     return render_template('index.html', 
         username=get_username(), 
         image=sampleGrid.displayGrid(), 
         text=sampleGrid.displayGrid("Text"),
-        maze=grab_map(sampleGrid) # use a better approach, this is for a sample
+        maze=grab_map(sampleGrid)
         )
 
 @app.route('/logout')
@@ -199,7 +186,7 @@ def save_maze():
         maze_id = int(maze_id[0]) + 1
     else:
         maze_id = 1
-    print(request.form.get('name'))
+    # print(request.form.get('name'))
     cursor.execute("INSERT INTO Maze (maze_id, user, name, x, y, seed) VALUES (?, ?, ?, ?, ?, ?)", (maze_id, current_user.username, request.json.get('name'), request.json.get('x'), request.json.get('y'), request.json.get('seed')))
     connection.commit()
     return jsonify({"success": True})

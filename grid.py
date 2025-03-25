@@ -4,6 +4,7 @@ import io
 import base64
 from math import ceil
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+from MazeRoomDescr import ROOM_TYPES
 
 def colorToString(color):
 	if type(color) != tuple:
@@ -42,12 +43,14 @@ class Grid:
 		self.y = y
 		self.seed = seed
 		self.grid = self.makeGrid()
+		self.rooms = []
+		
 	# Creates a grid of x by y pixels, where the outermost layer is a black 1 pixel thick border
 	def makeGrid(self):
-		return [[ceil((x % (self.x-1))/(x+1)) % 2*ceil((y % (self.y-1))/(y+1)) % 2 == 1 and \
-			(225,225,225) or (0,0,0) for x in range(self.x)] for y in range(self.y)]
-    
-	# generates n randomly sized rooms within grid
+	 	return [[ceil((x % (self.x-1))/(x+1)) % 2*ceil((y % (self.y-1))/(y+1)) % 2 == 1 and \
+	 		(225,225,225) or (0,0,0) for x in range(self.x)] for y in range(self.y)]
+     
+	# generates n randomly sized rooms within grid 
 	def generateRooms(self, n, max_room_size = 5):
 		if type(n) != int or type(max_room_size) != int:
 			raise BaseException('Grid.generateRooms - The input "n" must be an int.')
@@ -56,13 +59,45 @@ class Grid:
 		if n < 1 or max_room_size < 1:
 			raise BaseException('Grid.generateRooms - The input "n" or "max_room_size" must be at least 1.')
 			
-		for _ in range(n):
+		room_types = list(ROOM_TYPES.keys())
+		random.shuffle(room_types)
+		
+		# If we need more rooms than types, allow duplicates
+		if n > len(room_types):
+			room_types.extend(random.choices(room_types, k=n - len(room_types)))
+		
+		for i in range(n):
 			width = random.randint(2, max_room_size)
 			height = random.randint(2, max_room_size)
 			x = random.randint(1, self.x - width)
 			y = random.randint(1, self.y - height)
-			color = (random.randint(50, 255), random.randint(50, 255), random.randint(50, 255))
-			Room(x, y, width, height, color).place(self)
+			# Uses color from ROOM_TYPES
+			color = ROOM_TYPES[room_types[i]]['rgb']
+			self.rooms.insert(0, Room(x, y, width, height, color).place(self))
+    
+    # generates a path with a set complexity ####
+	def generatePath(self, complexity = 1):
+		"""Complexity levels are based on how full the space is, outside of the border or rooms.
+		0 represents a path between rooms.
+		1 represents a quarter of the empty space filled w/ paths.
+		2 representats half of the empty space filled w/ paths, meaning the rest is used as walls to separate.
+		Subject to change or get appended too.
+		"""
+		if complexity != 0 and complexity != 1 and complexity != 2:
+			raise BaseException(f'Grid.generatePath - complexity must be 0, 1, or 2.')
+		# TODO: Gen the maze using Mara's as reference and excluding rooms
+		for x in range(1, self.x):
+			for y in range(1, self.y):
+				if not self.withinRoom(x,y):
+					pass
+				pass # remove later
+	
+	# whether a given point is within a room
+	def withinRoom(self, x, y):
+		for topleft, bottomright, color in self.rooms:
+			if x > topleft[0] and x < bottomright[0] and y > topleft[1] and y < bottomright[1]:
+				return True
+		return False
     
     # converts a rectangle from grid space into image space, then to a string
 	def toImageLocation(self, point1, point2) -> str:
@@ -86,7 +121,7 @@ class Grid:
 			raise BaseException(f'Grid.toImageLocation - {\
 				(point1[0] > self.x or point1[1] > self.y) and "point1" or "point2"} cannot be beyond Grid(x={self.x},y={self.y}).')
 		try:
-			print(self.squareHeight)
+			min(self.squareHeight)
 		except:
 			a = min(480*self.x/self.y, 640)
 			b = min(640*self.y/self.x, 480)
@@ -181,4 +216,4 @@ class Room:
 				if 0 <= i < max_y and 0 <= j < max_x:  #  ensure within bounds
 					if grid.grid[i][j] != (0, 0, 0):  # avoid overwriting borders
 						grid.grid[i][j] = self.color
-		return grid      
+		return [(self.x, self.y), (self.x + self.width, self.y + self.height), self.color]      
