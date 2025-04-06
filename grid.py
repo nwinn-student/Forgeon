@@ -2,6 +2,7 @@ from matplotlib import pyplot
 import random
 import io
 import base64
+from collections import deque
 from math import ceil
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from MazeRoomDescr import ROOM_TYPES
@@ -77,27 +78,70 @@ class Grid:
     
     # generates a path with a set complexity ####
 	def generatePath(self, complexity = 1):
-		"""Complexity levels are based on how full the space is, outside of the border or rooms.
-		0 represents a path between rooms.
-		1 represents a quarter of the empty space filled w/ paths.
-		2 representats half of the empty space filled w/ paths, meaning the rest is used as walls to separate.
-		Subject to change or get appended too.
-		"""
-		if complexity != 0 and complexity != 1 and complexity != 2:
-			raise BaseException(f'Grid.generatePath - complexity must be 0, 1, or 2.')
-		# TODO: Gen the maze using Mara's as reference and excluding rooms
-		for x in range(1, self.x):
-			for y in range(1, self.y):
-				if not self.withinRoom(x,y):
-					pass
-				pass # remove later
-	
-	# whether a given point is within a room
-	def withinRoom(self, x, y):
-		for topleft, bottomright, color in self.rooms:
-			if x > topleft[0] and x < bottomright[0] and y > topleft[1] and y < bottomright[1]:
-				return True
-		return False
+		"""Generates the path"""
+		def carve_passages_from(x, y):
+			directions = [(0, 2), (2, 0), (0, -2), (-2, 0)]
+			random.shuffle(directions)
+			for dx, dy in directions:
+				nx, ny = x + dx, y + dy
+				if 0 < nx < self.x - 1 and 0 < ny < self.y - 1 and self.grid[ny][nx] != (0,0,0):
+					self.grid[y + dy // 2][x + dx // 2] = (0,0,0)
+					self.grid[ny][nx] = (0,0,0)
+					carve_passages_from(nx, ny)
+		def is_fully_connected(maze):
+			#Make sure there is no space not being reached from (1,1) start point
+			width, height = maze.x, maze.y
+			visited = set()
+			queue = deque([(1, 1)])
+			while queue:
+				x, y = queue.popleft()
+				if (x, y) in visited:
+					continue
+				visited.add((x, y))
+				for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+					nx, ny = x + dx, y + dy
+					if 0 <= nx < width and 0 <= ny < height and maze.grid[ny][nx] != (0,0,0) and (nx, ny) not in visited:
+						queue.append((nx, ny))
+			return all(maze.grid[y][x] != (0,0,0) or (x, y) in visited for y in range(height) for x in range(width))
+
+		#Fixes the maze by breaking walls to connect all regions. Ensure the connectivity of the whole maze
+		def ensure_connectivity(maze):
+			if is_fully_connected(maze):
+				print("Maze is already fully connected.")
+				return
+			width, height = maze.x, maze.y
+			queue = deque([(1, 1)])  # Start from entrance
+			visited = set(queue)
+			while queue:
+				x, y = queue.popleft()
+				for dx, dy in [(0, -1), (0, 1), (-1, 0), (1, 0)]:
+					nx, ny = x + dx, y + dy
+					if 0 <= nx < width and 0 <= ny < height and (nx, ny) not in visited:
+						if maze.grid[ny][nx] != (0,0,0):
+							queue.append((nx, ny))
+							visited.add((nx, ny))
+
+			# Identify isolated regions and connect them
+			for y in range(1, height - 1, 2):
+				for x in range(1, width - 1, 2):
+					if maze.grid[y][x] == (0,0,0) and (x, y) not in visited:
+						print(f"Fixing connectivity at ({x}, {y})")
+						# Find a neighboring passage to connect to
+						directions = [(0, -1), (1, 0), (0, -1), (-1, 0)]
+						random.shuffle(directions)
+						for dx, dy in directions:
+							nx, ny = x + dx, y + dy
+							if maze.grid[ny][nx] == (225,225,225):  # Connect to an existing path
+								maze.grid[(y + ny) // 2][(x + nx) // 2] = (225,225,225)
+								queue.append((x, y))
+								visited.add((x, y))
+								break  # Stop after fixing one connection
+			
+		carve_passages_from(1, 1)
+		ensure_connectivity(self)
+		# Fix rooms
+		for topleft, bottomright, color in list(reversed(self.rooms)):
+			Room(topleft[0], topleft[1], bottomright[0] - topleft[0], bottomright[1] - topleft[1], color).place(self)
     
     # converts a rectangle from grid space into image space, then to a string
 	def toImageLocation(self, point1, point2) -> str:
@@ -214,6 +258,5 @@ class Room:
 		for i in range(self.y, self.y + self.height):
 			for j in range(self.x, self.x + self.width):
 				if 0 <= i < max_y and 0 <= j < max_x:  #  ensure within bounds
-					if grid.grid[i][j] != (0, 0, 0):  # avoid overwriting borders
-						grid.grid[i][j] = self.color
+					grid.grid[i][j] = self.color
 		return [(self.x, self.y), (self.x + self.width, self.y + self.height), self.color]      
