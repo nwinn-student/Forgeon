@@ -1,6 +1,11 @@
 {% extends 'nav.html' %}
 
 {% block content %}
+
+{% from 'mazegenerate.html' import generate_modal %}
+
+{{ generate_modal(room_types) }}
+
 <div class="modal fade" id="maze-name-modal" tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -43,7 +48,8 @@
        	    <a href="" id="a" hidden></a>
             <button class="btn btn-primary btn-lg mt-3" onclick="download()">Save Maze Locally</button>
             <button class="btn btn-primary btn-lg mt-3" data-bs-toggle="modal" data-bs-target="#maze-name-modal">Save Maze to Server</button>
-		    <a class="btn btn-secondary btn-lg mt-3" href="/maze/randomize">Regenerate Maze</a>
+		    <a class="btn btn-secondary btn-lg mt-3" href="/maze/randomize">Generate Random Maze</a>
+            <button class="btn btn-secondary btn-lg mt-3" data-bs-toggle="modal" data-bs-target="#maze-gen-modal" onclick="generate_maze()">Generate Maze</button>
         </div>
     </div>
     <div class="text-center">
@@ -61,7 +67,7 @@
 <script>
     const download = () => {
         let a = document.querySelector("#a");
-        let file = new Blob(['{"seed": "{{seed}}", "x": "{{x}}", "y": "{{y}}"}'], {type: 'text/plain'});
+        let file = new Blob(['{"seed": "{{seed}}", "x": "{{x}}", "y": "{{y}}", "args": "{{args}}"}'], {type: 'application/json'});
         a.href = URL.createObjectURL(file);
         a.download = 'maze.json';
         a.click();
@@ -75,7 +81,8 @@
                 name: document.querySelector('#maze-name').value,
                 x: {{x}},
                 y: {{y}},
-                seed: {{seed}}
+                seed: {{seed}},
+                args: "{{args}}"
             })
         })
         .then(response => {

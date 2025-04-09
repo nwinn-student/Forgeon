@@ -52,15 +52,18 @@ class Grid:
 	 		(225,225,225) or (0,0,0) for x in range(self.x)] for y in range(self.y)]
      
 	# generates n randomly sized rooms within grid 
-	def generateRooms(self, n, max_room_size = 5):
+	def generateRooms(self, n, max_room_size = 5, filter=sum([0 | (1 << i) for i in range(0, len(ROOM_TYPES.keys()))])):
 		if type(n) != int or type(max_room_size) != int:
 			raise BaseException('Grid.generateRooms - The input "n" must be an int.')
 		if type(max_room_size) != int:
 			raise BaseException('Grid.generateRooms - The input "max_room_size" must be an int.')
 		if n < 1 or max_room_size < 1:
 			raise BaseException('Grid.generateRooms - The input "n" or "max_room_size" must be at least 1.')
-			
-		room_types = list(ROOM_TYPES.keys())
+
+		room_types = list()
+		for i in range (0, len(ROOM_TYPES)):
+			if filter & (1 << i):
+				room_types.append(list(ROOM_TYPES.keys())[i]) 
 		random.shuffle(room_types)
 		
 		# If we need more rooms than types, allow duplicates
