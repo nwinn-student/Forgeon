@@ -7,7 +7,7 @@ import random
 import grid
 import sqlite3
 import sys
-from MazeRoomDescr import ROOM_TYPES, generate_room_description
+from MazeRoomDescr import ROOM_TYPES, generate_room_description, set_rooms_seed
 
 sys.setrecursionlimit(10000)
 
@@ -61,6 +61,7 @@ def grab_map(grid):
     Takes the Grid and gets the room descriptions/locations
     Returns a list of [coordinates, roomName, description] pairs for each room
     '''
+    set_rooms_seed(grid.seed)
     maze_data = []    
     for topleft, bottomright, color in grid.rooms:
         for type_name, info in ROOM_TYPES.items():
