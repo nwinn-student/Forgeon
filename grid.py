@@ -8,6 +8,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from MazeRoomDescr import ROOM_TYPES
 
 def colorToString(color):
+	"""Converts a RBG color into a character"""
 	if type(color) != tuple:
 		raise BaseException('colorToString - Color must be a tuple.')
 	if len(color) != 3:
@@ -128,7 +129,7 @@ class Grid:
 			for y in range(1, height - 1, 2):
 				for x in range(1, width - 1, 2):
 					if maze.grid[y][x] == (0,0,0) and (x, y) not in visited:
-						print(f"Fixing connectivity at ({x}, {y})")
+						#print(f"Fixing connectivity at ({x}, {y})")
 						# Find a neighboring passage to connect to
 						directions = [(0, -1), (1, 0), (0, -1), (-1, 0)]
 						random.shuffle(directions)

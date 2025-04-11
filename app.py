@@ -50,7 +50,15 @@ def get_username():
         return ""
 
 # For grid
-def generate_image(x = 30, y = 30, seed = random.getrandbits(32), filter=sum([0 | (1 << i) for i in range(0, len(ROOM_TYPES.keys()))]), max_room_size=8, room_num=8):
+def generate_image(
+		x = 30, 
+		y = 30, 
+		seed = random.getrandbits(32), 
+		filter=sum([0 | (1 << i) for i in range(0, len(ROOM_TYPES.keys()))]), 
+		max_room_size=8, 
+		room_num=8
+	):
+    """Creates a Grid object using the inputs and generates rooms/paths onto the grid."""
     sampleGrid = grid.Grid(x,y,seed)
     sampleGrid.generateRooms(room_num, max_room_size=max_room_size, filter=filter)
     sampleGrid.generatePath(1)
@@ -154,15 +162,15 @@ def maze_redir():
 @login_required
 def randomize_maze():
     # Randomize the maze parameters and generate a new maze with these parameters
-    # Random width between 10 and 100
-    x = random.randint(10, 200)  
-    # Random height between 10 and 100
-    y = random.randint(10, 200)  
-    seed = random.getrandbits(32)  
-
+    # Random width between 10 and 150
+    x = random.randint(10, 150)
+    # Random height between 10 and 150
+    y = random.randint(100, 150)
+    seed = random.getrandbits(32)
+    # Customized to suite the grid size
     room_filter = random.getrandbits(len(ROOM_TYPES.keys()))
-    room_num = random.randint(1, round(math.sqrt(x * y)))
-    max_room_size = random.randint(5, 20)
+    max_room_size = random.randint(round(math.sqrt(min(x,y)/4)), round(math.sqrt(min(x,y)*4)))
+    room_num = random.randint(round(math.sqrt((x+y)/4)), round(math.sqrt(x * y / (2*max_room_size))))
     sampleGrid = generate_image(x, y, seed, room_filter, max_room_size, room_num=room_num)
     return render_template('gridview.html', username=get_username(), image=sampleGrid.displayGrid(), x=x, y=y, seed=seed, args=f"rf={room_filter};rnum={room_num};mrsize={max_room_size}", room_types=list(ROOM_TYPES.keys()), maze=grab_map(sampleGrid))
 
@@ -197,8 +205,8 @@ def arg_maze(x, y, seed, args):
                 flash(f"Invalid input: Room number must be less than {round(math.sqrt(x * y))} for dimensions ({x}, {y})", "danger")
                 return redirect('/')
         elif arg.split('=')[0] == 'mrsize':
-            if int(arg.split('=')[1]) < 5 or int(arg.split('=')[1]) > 20:
-                flash(f"Invalid input: Max room size must be between 5 and 20.", "danger")
+            if int(arg.split('=')[1]) < 5 or int(arg.split('=')[1]) > min(x,y):
+                flash(f"Invalid input: Max room size must be between 5 and {min(x,y)}.", "danger")
                 return redirect('/')
             else:
                 max_room_size = int(arg.split('=')[1])
