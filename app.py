@@ -18,6 +18,7 @@ cursor.execute(""" CREATE TABLE IF NOT EXISTS Maze (maze_id BIGINT, user varchar
 x INT, y INT, seed INT, args varchar(512)) """)
 
 app = Flask(__name__)
+
 secret_key = ''
 for i in range(255):
     secret_key += random.choice(string.ascii_letters)
