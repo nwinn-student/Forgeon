@@ -1,0 +1,32 @@
+{% macro generate_modal(room_types) %}
+<div class="modal fade" id="maze-gen-modal" tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="modal-label">Generate your Maze!</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div id="room-filters">
+                {% for i in range(room_types | length) %}
+                <input class="form-check-input" type="checkbox" value="{{i}}" id="room-filter{{i}}" checked>
+                <label class="form-check-label" for="room-filter{{i}}">{{room_types[i]}}</label>
+                <br>
+                {% endfor %}
+            </div>
+            <br>
+            <input type="number" id="room-num" name="room-num" placeholder="Room #" min="1" required>
+            <input type="number" id="max-room-size" name="max-room-size" placeholder="Max Room Size" min="5" max="20" required>
+            <hr>
+            <input type="number" id="width" name="width" placeholder="Width" min="10" max="200" required>
+            <input type="number" id="height" name="height" placeholder="Height" min="10" max="200" required>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="generate_maze()">Generate!</button>
+        </div>
+      </div>
+    </div>
+</div>
+<script src="{{url_for('static', filename='js/generate-maze.js')}}"></script>
+{% endmacro %}

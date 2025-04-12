@@ -11,9 +11,9 @@
         <p>Login to generate more mazes.</p>
         <img src="{{ image }}"  usemap="#mazemap"/>
         <map name="mazemap">
-            {% for coord, desc in maze %}
-            <area style="cursor: pointer" shape="rect" coords="{{ coord }}" title="{{ desc }}" 
-                  onmouseover="showTooltip(event, '{{ desc }}')" 
+            {% for coord, title, desc in maze %}
+            <area style="cursor: pointer" shape="rect" coords="{{ coord }}" alt="{{ title }}" 
+                  onmousemove="showTooltip(event, '{{ desc }}')" 
                   onmouseout="hideTooltip()">
             {% endfor %}
         </map>

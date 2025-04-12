@@ -1,6 +1,11 @@
 {% extends 'nav.html' %}
 
 {% block content %}
+
+{% from 'mazegenerate.html' import generate_modal %}
+
+{{ generate_modal(room_types) }}
+
 <!-- Tooltip div for room descriptions -->
 <div id="room-tooltip" class="position-fixed bg-dark text-white p-3 rounded shadow" style="display: none; z-index: 1000; max-width: 300px;"></div>
 
@@ -10,14 +15,15 @@
         <p id="error-text" class="alert alert-danger text-center fw-bold" hidden>Not a valid maze!</p>
         <img src="{{ image }}" class="img-fluid my-3 rounded shadow-lg" alt="Generated Maze" usemap="#mazemap">
         <map name="mazemap">
-            {% for coord, desc in maze %}
-            <area style="cursor: pointer" shape="rect" coords="{{ coord }}" title="{{ desc }}" 
-                  onmouseover="showTooltip(event, '{{ desc }}')" 
+            {% for coord, title, desc in maze %}
+            <area style="cursor: pointer" shape="rect" coords="{{ coord }}" alt="{{ title }}" 
+                  onmousemove="showTooltip(event, '{{ desc }}')" 
                   onmouseout="hideTooltip()">
             {% endfor %}
         </map>
         <div>
-            <a class="btn btn-primary btn-lg me-2" href="/maze">Generate Maze</a>
+            <button class="btn btn-primary btn-lg me-2" data-bs-toggle="modal" data-bs-target="#maze-gen-modal">Generate Maze</button>
+            <button class="btn btn-primary btn-lg me-2" onclick="location.assign('/maze/randomize')">Generate Random Maze</button>
             <button class="btn btn-secondary btn-lg" onclick="document.querySelector('#file-upload').click()">Load Maze</button>
             <input id="file-upload" type="file" hidden>
         </div>
@@ -32,7 +38,7 @@
             reader.onload = e => { 
                 try {
                     let json_contents = JSON.parse(e.target.result);
-                    window.location.replace(`/maze/${json_contents.x}/${json_contents.y}/${json_contents.seed}`);
+                    window.location.replace(`/maze/${json_contents.x}/${json_contents.y}/${json_contents.seed}/${json_contents.args}`);
                 } catch (error) {
                     document.querySelector("#error-text").hidden = false;
                 }

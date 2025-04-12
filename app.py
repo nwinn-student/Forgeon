@@ -1,17 +1,21 @@
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, current_user, login_required, logout_user
 from flask_sqlalchemy import SQLAlchemy
+import math
 import string
 import random
 import grid
 import sqlite3
-from MazeRoomDescr import ROOM_TYPES, generate_room_description
+import sys
+from MazeRoomDescr import ROOM_TYPES, generate_room_description, set_rooms_seed
+
+sys.setrecursionlimit(10000)
 
 connection = sqlite3.connect("Forgeon.db", check_same_thread=False)
 cursor = connection.cursor()
 
 cursor.execute(""" CREATE TABLE IF NOT EXISTS Maze (maze_id BIGINT, user varchar(255), name varchar(255),
-x INT, y INT, seed INT) """)
+x INT, y INT, seed INT, args varchar(512)) """)
 
 app = Flask(__name__)
 
@@ -47,48 +51,38 @@ def get_username():
         return ""
 
 # For grid
-def generate_image(x = 30, y = 30, seed = random.getrandbits(32)):
+def generate_image(
+		x = 30, 
+		y = 30, 
+		seed = random.getrandbits(32), 
+		filter=sum([0 | (1 << i) for i in range(0, len(ROOM_TYPES.keys()))]), 
+		max_room_size=8, 
+		room_num=8
+	):
+    """Creates a Grid object using the inputs and generates rooms/paths onto the grid."""
     sampleGrid = grid.Grid(x,y,seed)
-    sampleGrid.generateRooms(8, max_room_size=8)
+    sampleGrid.generateRooms(room_num, max_room_size=max_room_size, filter=filter)
+    sampleGrid.generatePath(1)
     return sampleGrid
     
 def grab_map(grid):
     '''
     Takes the Grid and gets the room descriptions/locations
-    Returns a list of [coordinates, description] pairs for each room
+    Returns a list of [coordinates, roomName, description] pairs for each room
     '''
-    maze_data = []
-    # Dictionary to store room descriptions to ensure consistency
-    room_descriptions = {}
-    
-    for y in range(grid.y):
-        for x in range(grid.x):
-           # check for room and color
-            if grid.grid[y][x] != (0, 0, 0) and grid.grid[y][x] != (225, 225, 225):
-               # room type based off color
-                room_type = None
-                for type_name, info in ROOM_TYPES.items():
-                    if info['rgb'] == grid.grid[y][x]:
-                        room_type = type_name
-                        break
-                
-                if room_type:
-                    # generate description
-                    room_info = ROOM_TYPES[room_type]
-                    
-                    # Create a unique key for this room type and color
-                    room_key = f"{room_type}_{room_info['color']}"
-                    
-                    # Generate description only once per room type and color
-                    if room_key not in room_descriptions:
-                        room_descriptions[room_key] = f"{room_info['color']} Room: {generate_room_description()}"
-                    
-                    # Get coordinates for the room
-                    coords = grid.toImageLocation((x, y), (x+1, y+1))
-                    maze_data.append([
-                        '{},{},{},{}'.format(*coords),
-                        room_descriptions[room_key]
-                    ])
+    set_rooms_seed(grid.seed)
+    maze_data = []    
+    for topleft, bottomright, color in grid.rooms:
+        for type_name, info in ROOM_TYPES.items():
+            if info['rgb'] == color:
+                # Get coordinates for the room
+                coords = grid.toImageLocation(topleft, bottomright)
+                maze_data.append([
+                    '{},{},{},{}'.format(*coords),
+                    type_name,
+                    f"{type_name}: {generate_room_description()}" # regenerates when you refresh page, intended?
+                ])
+                break    
     return maze_data
 
 @app.route('/')
@@ -100,14 +94,14 @@ def welcome_page():
         return render_template('home.html', 
 		        username=get_username(), 
 		        image=sampleGrid.displayGrid(),
-		        maze=grab_map(sampleGrid) # use a better approach, this is for a sample
+		        maze=grab_map(sampleGrid),
+                room_types=(list(ROOM_TYPES.keys()))
 		    )
-    # 
     return render_template('index.html', 
         username=get_username(), 
         image=sampleGrid.displayGrid(), 
         text=sampleGrid.displayGrid("Text"),
-        maze=grab_map(sampleGrid) # use a better approach, this is for a sample
+        maze=grab_map(sampleGrid)
         )
 
 @app.route('/logout')
@@ -169,12 +163,17 @@ def maze_redir():
 @login_required
 def randomize_maze():
     # Randomize the maze parameters and generate a new maze with these parameters
-    # Random width between 10 and 100
-    x = random.randint(10, 100)  
-    # Random height between 10 and 100
-    y = random.randint(10, 100)  
-    seed = random.getrandbits(32)  
-    return redirect(url_for('maze_view', x=x, y=y, seed=seed))
+    # Random width between 10 and 150
+    x = random.randint(10, 150)
+    # Random height between 10 and 150
+    y = random.randint(100, 150)
+    seed = random.getrandbits(32)
+    # Customized to suite the grid size
+    room_filter = random.getrandbits(len(ROOM_TYPES.keys()))
+    max_room_size = random.randint(round(math.sqrt(min(x,y)/4)), round(math.sqrt(min(x,y)*4)))
+    room_num = random.randint(round(math.sqrt((x+y)/4)), round(math.sqrt(x * y / (2*max_room_size))))
+    sampleGrid = generate_image(x, y, seed, room_filter, max_room_size, room_num=room_num)
+    return render_template('gridview.html', username=get_username(), image=sampleGrid.displayGrid(), x=x, y=y, seed=seed, args=f"rf={room_filter};rnum={room_num};mrsize={max_room_size}", room_types=list(ROOM_TYPES.keys()), maze=grab_map(sampleGrid))
 
 @app.route('/maze/<int:x>/<int:y>/<int:seed>')
 @login_required
@@ -185,7 +184,43 @@ def maze_view(x, y, seed):
         # Redirect to default maze
         return redirect(url_for('maze_view', x=30, y=30, seed=random.getrandbits(32)))
     sampleGrid = generate_image(x, y, seed)
-    return render_template('gridview.html', username=get_username(), image=sampleGrid.displayGrid(), x=x, y=y, seed=seed, maze=grab_map(sampleGrid))
+    return render_template('gridview.html', username=get_username(), image=sampleGrid.displayGrid(), x=x, y=y, seed=seed, args="", room_types=list(ROOM_TYPES.keys()), maze=grab_map(sampleGrid))
+
+@app.route('/maze/<int:x>/<int:y>/<int:seed>/<string:args>')
+@login_required
+def arg_maze(x, y, seed, args):
+    if x < 10 or x > 200 or y < 10 or y > 200:
+        flash(f"Invalid input: Width and height must be between 10 and 200.", "danger")
+        return redirect(url_for('maze_view', x=30, y=30, seed=random.getrandbits(32)))
+    arg_list = args.split(';')
+    room_filter = None
+    room_num = 8
+    max_room_size = None
+    for arg in arg_list:
+        if arg.split('=')[0] == 'rf':
+            room_filter = int(arg.split('=')[1])
+        elif arg.split('=')[0] == 'rnum':
+            if int(arg.split('=')[1]) <= round(math.sqrt(x * y)):
+                room_num = int(arg.split('=')[1])
+            else:
+                flash(f"Invalid input: Room number must be less than {round(math.sqrt(x * y))} for dimensions ({x}, {y})", "danger")
+                return redirect('/')
+        elif arg.split('=')[0] == 'mrsize':
+            if int(arg.split('=')[1]) < 5 or int(arg.split('=')[1]) > min(x,y):
+                flash(f"Invalid input: Max room size must be between 5 and {min(x,y)}.", "danger")
+                return redirect('/')
+            else:
+                max_room_size = int(arg.split('=')[1])
+
+    if room_filter and max_room_size:
+        sampleGrid = generate_image(x, y, seed, room_filter, max_room_size, room_num=room_num)
+    elif room_filter:
+        sampleGrid = generate_image(x, y, seed, room_filter, room_num=room_num)
+    elif max_room_size:
+        sampleGrid = generate_image(x, y, seed, max_room_size=max_room_size, room_num=room_num)
+    else:
+        sampleGrid = generate_image(x, y, seed, room_num=room_num)
+    return render_template('gridview.html', username=get_username(), image=sampleGrid.displayGrid(), x=x, y=y, seed=seed, room_types=list(ROOM_TYPES.keys()), args=args, maze=grab_map(sampleGrid))
 
 @app.route('/maze/custom', methods=['POST'])
 @login_required
@@ -207,15 +242,15 @@ def save_maze():
         maze_id = int(maze_id[0]) + 1
     else:
         maze_id = 1
-    print(request.form.get('name'))
-    cursor.execute("INSERT INTO Maze (maze_id, user, name, x, y, seed) VALUES (?, ?, ?, ?, ?, ?)", (maze_id, current_user.username, request.json.get('name'), request.json.get('x'), request.json.get('y'), request.json.get('seed')))
+    # print(request.form.get('name'))
+    cursor.execute("INSERT INTO Maze (maze_id, user, name, x, y, seed, args) VALUES (?, ?, ?, ?, ?, ?, ?)", (maze_id, current_user.username, request.json.get('name'), request.json.get('x'), request.json.get('y'), request.json.get('seed'), request.json.get('args')))
     connection.commit()
     return jsonify({"success": True})
 
 @app.route('/my-mazes')
 @login_required
 def user_mazes():
-    cursor.execute("SELECT maze_id, name, x, y, seed FROM Maze WHERE user = ? ORDER BY maze_id", (current_user.username,))
+    cursor.execute("SELECT maze_id, name, x, y, seed, args FROM Maze WHERE user = ? ORDER BY maze_id", (current_user.username,))
     mazes = cursor.fetchall()
     if len(mazes) == 0:
         return render_template('mazes.html', mazes=None, username=get_username())

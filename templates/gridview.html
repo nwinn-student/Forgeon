@@ -1,6 +1,11 @@
 {% extends 'nav.html' %}
 
 {% block content %}
+
+{% from 'mazegenerate.html' import generate_modal %}
+
+{{ generate_modal(room_types) }}
+
 <div class="modal fade" id="maze-name-modal" tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
     <div class="modal-dialog">
       <div class="modal-content">
@@ -33,9 +38,9 @@
         <h2 class="display-4 fw-bold">Your Maze</h2>
         <img src="{{ image }}" class="img-fluid my-3 rounded shadow-lg" alt="Maze Image" usemap="#mazemap">
 	    <map name="mazemap">
-            {% for coord, desc in maze %}
-            <area style="cursor: pointer" shape="rect" coords="{{ coord }}" title="{{ desc }}" 
-                  onmouseover="showTooltip(event, '{{ desc }}')" 
+            {% for coord, title, desc in maze %}
+            <area style="cursor: pointer" shape="rect" coords="{{ coord }}" alt="{{ title }}" 
+                  onmousemove="showTooltip(event, '{{ desc }}')" 
                   onmouseout="hideTooltip()">
             {% endfor %}
         </map>
@@ -43,25 +48,18 @@
        	    <a href="" id="a" hidden></a>
             <button class="btn btn-primary btn-lg mt-3" onclick="download()">Save Maze Locally</button>
             <button class="btn btn-primary btn-lg mt-3" data-bs-toggle="modal" data-bs-target="#maze-name-modal">Save Maze to Server</button>
-		    <a class="btn btn-secondary btn-lg mt-3" href="/maze/randomize">Regenerate Maze</a>
+		    <a class="btn btn-secondary btn-lg mt-3" href="/maze/randomize">Generate Random Maze</a>
+            <button class="btn btn-secondary btn-lg mt-3" data-bs-toggle="modal" data-bs-target="#maze-gen-modal">Generate Maze</button>
         </div>
     </div>
     <div class="text-center">
-    </div>
-    <div class="text-center mt-4">
-        <h4>Custom Maze Size</h4>
-        <form action="/maze/custom" method="post">
-            <input type="number" name="width" placeholder="Width" min="10" max="200" required>
-            <input type="number" name="height" placeholder="Height" min="10" max="200" required>
-            <button type="submit" class="btn btn-info">Generate Custom Maze</button>
-        </form>
     </div>
 </div>
 
 <script>
     const download = () => {
         let a = document.querySelector("#a");
-        let file = new Blob(['{"seed": "{{seed}}", "x": "{{x}}", "y": "{{y}}"}'], {type: 'text/plain'});
+        let file = new Blob(['{"seed": "{{seed}}", "x": "{{x}}", "y": "{{y}}", "args": "{{args}}"}'], {type: 'application/json'});
         a.href = URL.createObjectURL(file);
         a.download = 'maze.json';
         a.click();
@@ -75,7 +73,8 @@
                 name: document.querySelector('#maze-name').value,
                 x: {{x}},
                 y: {{y}},
-                seed: {{seed}}
+                seed: {{seed}},
+                args: "{{args}}"
             })
         })
         .then(response => {
