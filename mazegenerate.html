@@ -1,0 +1,55 @@
+{% macro generate_modal(room_types) %}
+<div class="modal fade" id="maze-gen-modal" tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" id="modal-label">Generate your Maze!</h1>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class="row">
+                <!-- Room Types Column -->
+                <div class="col-6">
+                    <h6 class="mb-3">Room Types</h6>
+                    <div id="room-filters">
+                        {% for i in range(room_types | length) %}
+                        <div class="form-check">
+                            <input class="form-check-input room-type-checkbox" type="checkbox" value="{{i}}" id="room-filter{{i}}" checked>
+                            <label class="form-check-label" for="room-filter{{i}}">{{room_types[i]}}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <!-- Dungeon Types Column -->
+                <div class="col-6">
+                    <h6 class="mb-3">Dungeon Types</h6>
+                    <div id="dungeon-presets">
+                        <div class="form-check">
+                            <input class="form-check-input dungeon-preset" type="radio" name="dungeon-type" id="preset-tomb" value="tomb">
+                            <label class="form-check-label" for="preset-tomb">Tomb</label>
+                        </div>
+                        <!-- Add more presets here -->
+                    </div>
+                </div>
+            </div>
+            <hr>
+            <div class="row mt-3">
+                <div class="col-6">
+                    <input type="number" id="room-num" name="room-num" class="form-control mb-2" placeholder="Room #" min="1" required>
+                    <input type="number" id="max-room-size" name="max-room-size" class="form-control" placeholder="Max Room Size" min="5" max="20" required>
+                </div>
+                <div class="col-6">
+                    <input type="number" id="width" name="width" class="form-control mb-2" placeholder="Width" min="10" max="200" required>
+                    <input type="number" id="height" name="height" class="form-control" placeholder="Height" min="10" max="200" required>
+                </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="generate_maze()">Generate!</button>
+        </div>
+      </div>
+    </div>
+</div>
+<script src="{{url_for('static', filename='js/generate-maze.js')}}"></script>
+{% endmacro %}
