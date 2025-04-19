@@ -199,7 +199,7 @@ def arg_maze(x, y, seed, args):
         if arg.split('=')[0] == 'rf':
             room_filter = int(arg.split('=')[1])
         elif arg.split('=')[0] == 'rnum':
-            if int(arg.split('=')[1]) <= round(x * y / 100):
+            if int(arg.split('=')[1]) <= round(x * y / 25):
                 room_num = int(arg.split('=')[1])
             else:
                 flash(f"Invalid input: Room number must be less than {round(math.sqrt(x * y))} for dimensions ({x}, {y})", "danger")
