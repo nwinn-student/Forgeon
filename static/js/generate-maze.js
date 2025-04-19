@@ -39,8 +39,36 @@ const DUNGEON_PRESETS = {
         maxRoomSize: 10,
         mazeWidth: 30,
         mazeHeigth: 30
-    }
+    },
     // Add more presets here
+    'Default': {
+	    requiredRooms: ['Prison Room', 'Treasure Room', 'Secret Room', 'Armory', 'Library', 'Trap Room', 'Monster Lair', 'Alchemy Lab', 'Puzzle Room', 'Magic Chamber'],
+        minRooms: 5,
+        maxRoomSize: 10,
+        mazeWidth: 30,
+        mazeHeigth: 30
+	},
+    'Castle': {
+	    requiredRooms: ['Prison Room', 'Treasure Room', 'Secret Room', 'Armory', 'Library'],
+        minRooms: 5,
+        maxRoomSize: 10,
+        mazeWidth: 30,
+        mazeHeigth: 30
+	},
+	'Haunted': {
+	    requiredRooms: ["Trap Room", "Monster Lair", "Secret Room", "Alchemy Lab", "Puzzle Room", "Magic Chamber"],
+        minRooms: 5,
+        maxRoomSize: 10,
+        mazeWidth: 30,
+        mazeHeigth: 30
+	},
+	'Corridor': {
+	    requiredRooms: ["Treasure Room", "Trap Room", "Monster Lair", "Secret Room", "Alchemy Lab", "Puzzle Room"],
+        minRooms: 5,
+        maxRoomSize: 10,
+        mazeWidth: 30,
+        mazeHeigth: 30
+	}
 };
 
 // Function to handle dungeon preset selection
