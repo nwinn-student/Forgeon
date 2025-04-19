@@ -1,0 +1,67 @@
+<!-- if i break da code, return to this version -->
+
+{% extends 'nav.html' %}
+
+{% block content %}
+
+<!-- Tooltip container -->
+<div id="room-tooltip" class="position-fixed bg-dark text-white p-3 rounded shadow" style="display: none; z-index: 1000; max-width: 300px;"></div>
+
+<div class="container my-5 text-center">
+  <h2 class="display-4 fw-bold">Welcome to Forgeon!</h2>
+  <p>Login to generate more mazes.</p>
+
+  <!-- JSON-injected room data -->
+  <script>
+    const roomData = {{ maze | tojson }};
+  </script>
+
+  <!-- Maze Image -->
+  <img id="maze-image" src="{{ image }}" class="my-3 rounded shadow-lg" alt="Maze Image">
+
+  <!-- Text version below image -->
+  <p style="white-space: pre-line; font-family: monospace; transform: scale(2, .7);">{{ text }}</p>
+</div>
+
+<script>
+  const tooltip = document.getElementById('room-tooltip');
+  const image = document.getElementById('maze-image');
+
+  const squareWidth = image.width / {{ x }};
+  const squareHeight = image.height / {{ y }};
+
+  image.addEventListener('mousemove', function (event) {
+    const rect = image.getBoundingClientRect();
+    const offsetX = event.clientX - rect.left;
+    const offsetY = event.clientY - rect.top;
+    const gridX = Math.floor(offsetX / squareWidth);
+    const gridY = Math.floor(offsetY / squareHeight);
+
+    const matches = roomData.filter(r => gridX >= r.x && gridX < r.x2 && gridY >= r.y && gridY < r.y2);
+
+    if (matches.length > 0) {
+      tooltip.innerHTML = matches.map(r => r.description).join("<hr>");
+      tooltip.style.display = 'block';
+
+      let tooltipX = event.clientX + 10;
+      let tooltipY = event.clientY + 10;
+      const tooltipRect = tooltip.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      if (tooltipX + tooltipRect.width > vw) tooltipX -= tooltipRect.width + 20;
+      if (tooltipY + tooltipRect.height > vh) tooltipY -= tooltipRect.height + 20;
+
+      tooltip.style.left = tooltipX + 'px';
+      tooltip.style.top = tooltipY + 'px';
+    } else {
+      tooltip.style.display = 'none';
+    }
+  });
+
+  image.addEventListener('mouseout', function () {
+    tooltip.style.display = 'none';
+  });
+</script>
+
+{% endblock %}

@@ -1,0 +1,145 @@
+<!-- if i break da code, return to this version -->
+
+{% extends 'nav.html' %}
+
+{% block content %}
+
+{% from 'mazegenerate.html' import generate_modal %}
+{{ generate_modal(room_types) }}
+
+<!-- Modal for naming maze -->
+<div class="modal fade" id="maze-name-modal" tabindex="-1" aria-labelledby="modal-label" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="modal-label">Name This Maze!</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form>
+          <div class="mb-3">
+            <label for="maze-name" class="col-form-label">Maze Name:</label>
+            <input type="text" class="form-control" id="maze-name">
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal" onclick="save_maze()">Save</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Tooltip -->
+<div id="room-tooltip" class="position-fixed bg-dark text-white p-3 rounded shadow" style="display: none; z-index: 1000; max-width: 300px;"></div>
+
+<div class="container my-5 text-center">
+  <p id="error-text" class="text-center bg-danger text-white" hidden>Could not Save to Server!</p>
+  <h2 class="display-4 fw-bold">Welcome to Forgeon!</h2>
+
+  <!-- JSON-injected data -->
+  <script>
+    const roomData = {{ maze | tojson }};
+  </script>
+
+  <!-- Maze Display -->
+  <img id="maze-image" src="{{ image }}" class="my-3 rounded shadow-lg" alt="Maze Image">
+  <div class="mt-3">
+    <button class="btn btn-primary btn-lg me-2" data-bs-toggle="modal" data-bs-target="#customMazeModal">Generate Maze</button>
+    <button class="btn btn-primary btn-lg me-2" onclick="location.assign('/maze/randomize')">Generate Random Maze</button>
+    <button class="btn btn-secondary btn-lg me-2" onclick="document.querySelector('#file-upload').click()">Load Maze</button>
+    <input id="file-upload" type="file" hidden>
+    <button class="btn btn-success btn-lg" data-bs-toggle="modal" data-bs-target="#maze-name-modal">Save Maze to Server</button>
+  </div>
+</div>
+
+<script>
+  const tooltip = document.getElementById('room-tooltip');
+  const image = document.getElementById('maze-image');
+
+  const squareWidth = image.width / {{ x }};
+  const squareHeight = image.height / {{ y }};
+
+  const roomMap = Array.from({ length: {{ y }} }, () => Array({{ x }}).fill(null));
+  for (const room of roomData) {
+    for (let y = room.y; y < room.y2; y++) {
+      for (let x = room.x; x < room.x2; x++) {
+        roomMap[y][x] = room;
+      }
+    }
+  }
+
+  image.addEventListener('mousemove', function (event) {
+    const rect = image.getBoundingClientRect();
+    const offsetX = event.clientX - rect.left;
+    const offsetY = event.clientY - rect.top;
+    const gridX = Math.floor(offsetX / squareWidth);
+    const gridY = Math.floor(offsetY / squareHeight);
+
+    if (gridY >= 0 && gridY < roomMap.length && gridX >= 0 && gridX < roomMap[0].length) {
+      const room = roomMap[gridY][gridX];
+      if (room) {
+        tooltip.innerHTML = room.description;
+
+        tooltip.style.left = '-9999px';
+        tooltip.style.top = '-9999px';
+        tooltip.style.display = 'block';
+
+        const tooltipRect = tooltip.getBoundingClientRect();
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+
+        let tooltipX = event.clientX + 10;
+        let tooltipY = event.clientY + 10;
+
+        if (tooltipX + tooltipRect.width > vw) tooltipX = vw - tooltipRect.width - 10;
+        if (tooltipY + tooltipRect.height > vh) tooltipY = vh - tooltipRect.height - 10;
+
+        tooltip.style.left = tooltipX + 'px';
+        tooltip.style.top = tooltipY + 'px';
+      } else {
+        tooltip.style.display = 'none';
+      }
+    } else {
+      tooltip.style.display = 'none';
+    }
+  });
+
+  image.addEventListener('mouseout', function () {
+    tooltip.style.display = 'none';
+  });
+
+  document.querySelector('#file-upload').addEventListener('change', (event) => {
+    let maze = event.target.files[0];
+    if (maze) {
+      const reader = new FileReader();
+      reader.onload = e => {
+        try {
+          let json = JSON.parse(e.target.result);
+          window.location.replace(`/maze/${json.x}/${json.y}/${json.seed}/${json.args}`);
+        } catch {
+          document.querySelector("#error-text").hidden = false;
+        }
+      };
+      reader.readAsText(maze);
+    }
+  });
+
+  const save_maze = () => {
+    fetch('/save-maze', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: document.querySelector('#maze-name').value,
+        x: {{x}}, y: {{y}}, seed: {{seed}}, args: "{{args}}"
+      })
+    })
+    .then(res => res.json())
+    .then(data => {
+      document.querySelector('#error-text').hidden = data['success'];
+    });
+  };
+</script>
+
+{% endblock %}
