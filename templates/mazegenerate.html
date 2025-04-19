@@ -7,19 +7,58 @@
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            <div id="room-filters">
-                {% for i in range(room_types | length) %}
-                <input class="form-check-input" type="checkbox" value="{{i}}" id="room-filter{{i}}" checked>
-                <label class="form-check-label" for="room-filter{{i}}">{{room_types[i]}}</label>
-                <br>
-                {% endfor %}
+            <div class="row">
+                <!-- Room Types Column -->
+                <div class="col-6">
+                    <h6 class="mb-3">Room Types</h6>
+                    <div id="room-filters">
+                        {% for i in range(room_types | length) %}
+                        <div class="form-check">
+                            <input class="form-check-input room-type-checkbox" type="checkbox" value="{{i}}" id="room-filter{{i}}" checked>
+                            <label class="form-check-label" for="room-filter{{i}}">{{room_types[i]}}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+                <!-- Dungeon Types Column -->
+                <div class="col-6">
+                    <h6 class="mb-3">Dungeon Types</h6>
+                    <div id="dungeon-presets">
+                        <div class="form-check">
+                            <input class="form-check-input dungeon-preset" type="radio" name="dungeon-type" id="preset-Tomb" value="Tomb">
+                            <label class="form-check-label" for="preset-tomb">Tomb</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input dungeon-preset" type="radio" name="dungeon-type" id="preset-Labyrinth" value="Labyrinth">
+                            <label class="form-check-label" for="preset-tomb">Labyrinth</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input dungeon-preset" type="radio" name="dungeon-type" id="preset-TrickOrTreat" value="Trick-Or-Treat">
+                            <label class="form-check-label" for="preset-tomb">Trick-Or-Treat</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input dungeon-preset" type="radio" name="dungeon-type" id="preset-WizardTower" value="Wizard Tower">
+                            <label class="form-check-label" for="preset-tomb">Wizard Tower</label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input dungeon-preset" type="radio" name="dungeon-type" id="preset-Stronghold" value="Stronghold">
+                            <label class="form-check-label" for="preset-tomb">Stronghold</label>
+                        </div>
+                        <!-- Add more presets here -->
+                    </div>
+                </div>
             </div>
-            <br>
-            <input type="number" id="room-num" name="room-num" placeholder="Room #" min="1" required>
-            <input type="number" id="max-room-size" name="max-room-size" placeholder="Max Room Size" min="5" max="20" required>
             <hr>
-            <input type="number" id="width" name="width" placeholder="Width" min="10" max="200" required>
-            <input type="number" id="height" name="height" placeholder="Height" min="10" max="200" required>
+            <div class="row mt-3">
+                <div class="col-6">
+                    <input type="number" id="room-num" name="room-num" class="form-control mb-2" placeholder="Room #" min="1" required>
+                    <input type="number" id="max-room-size" name="max-room-size" class="form-control" placeholder="Max Room Size" min="5" max="20" required>
+                </div>
+                <div class="col-6">
+                    <input type="number" id="width" name="width" class="form-control mb-2" placeholder="Width" min="10" max="200" required>
+                    <input type="number" id="height" name="height" class="form-control" placeholder="Height" min="10" max="200" required>
+                </div>
+            </div>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
