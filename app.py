@@ -18,7 +18,6 @@ cursor.execute(""" CREATE TABLE IF NOT EXISTS Maze (maze_id BIGINT, user varchar
 x INT, y INT, seed INT, args varchar(512)) """)
 
 app = Flask(__name__)
-
 secret_key = ''
 for i in range(255):
     secret_key += random.choice(string.ascii_letters)
@@ -200,7 +199,7 @@ def arg_maze(x, y, seed, args):
         if arg.split('=')[0] == 'rf':
             room_filter = int(arg.split('=')[1])
         elif arg.split('=')[0] == 'rnum':
-            if int(arg.split('=')[1]) <= round(math.sqrt(x * y)):
+            if int(arg.split('=')[1]) <= round(x * y / 100):
                 room_num = int(arg.split('=')[1])
             else:
                 flash(f"Invalid input: Room number must be less than {round(math.sqrt(x * y))} for dimensions ({x}, {y})", "danger")
